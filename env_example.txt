@@ -1,0 +1,7 @@
+# Telegram Bot Token (получите у @BotFather)
+TELEGRAM_TOKEN=your_telegram_bot_token_here
+
+# Yandex Cloud API (более дешевый и качественный для русского языка)
+# Получите на https://cloud.yandex.ru/
+YANDEX_API_KEY=your_yandex_api_key_here
+YANDEX_FOLDER_ID=your_yandex_folder_id_here 
