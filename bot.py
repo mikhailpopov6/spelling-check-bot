@@ -84,6 +84,11 @@ class TextBot:
 2. Отправьте текст для обработки (или сразу после команды)
 3. Получите результат!
 
+**Особенности:**
+✅ Поддерживает многострочный текст с абзацами
+✅ Сохраняет структуру форматирования
+✅ Автоматически исправляет тире
+
 **Примеры:**
 /check Привет как дела
 /improve Текст с ошибками
@@ -100,6 +105,9 @@ class TextBot:
         # Проверяем, есть ли текст после команды
         if context.args:
             text = ' '.join(context.args)
+            # Обрабатываем многострочные сообщения
+            if text and '\n' in text:
+                text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_check_text(update, text)
         else:
             self.user_states[user_id] = "waiting_for_text_check"
@@ -112,6 +120,9 @@ class TextBot:
         # Проверяем, есть ли текст после команды
         if context.args:
             text = ' '.join(context.args)
+            # Обрабатываем многострочные сообщения
+            if text and '\n' in text:
+                text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_improve_text(update, text)
         else:
             self.user_states[user_id] = "waiting_for_text_improve"
@@ -124,6 +135,9 @@ class TextBot:
         # Проверяем, есть ли текст после команды
         if context.args:
             text = ' '.join(context.args)
+            # Обрабатываем многострочные сообщения
+            if text and '\n' in text:
+                text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_shorten_text(update, text)
         else:
             self.user_states[user_id] = "waiting_for_text_shorten"
@@ -215,6 +229,11 @@ class TextBot:
         """Обработчик текстовых сообщений"""
         user_id = update.effective_user.id
         text = update.message.text
+        
+        # Обрабатываем многострочные сообщения
+        if text and '\n' in text:
+            # Нормализуем переносы строк
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
         
         if user_id not in self.user_states:
             # Если пользователь не в состоянии ожидания, показываем главное меню

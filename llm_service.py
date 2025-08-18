@@ -36,6 +36,28 @@ class LLMService:
         text = re.sub(r'(?<![\w])-(?![\w])', '–', text)
         return text
     
+    def preserve_paragraphs(self, text: str) -> str:
+        """
+        Сохраняет структуру абзацев в тексте
+        
+        Args:
+            text: Исходный текст
+        
+        Returns:
+            Текст с сохраненной структурой абзацев
+        """
+        # Нормализуем переносы строк
+        text = re.sub(r'\r\n', '\n', text)  # Windows -> Unix
+        text = re.sub(r'\r', '\n', text)    # Mac -> Unix
+        
+        # Убираем лишние пробелы в начале и конце
+        text = text.strip()
+        
+        # Заменяем множественные переносы строк на двойные
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+    
     async def process_text(self, text: str, task_type: str) -> str:
         """
         Обрабатывает текст с помощью YandexGPT в зависимости от типа задачи
@@ -47,6 +69,9 @@ class LLMService:
         Returns:
             Обработанный текст
         """
+        # Обрабатываем структуру абзацев
+        text = self.preserve_paragraphs(text)
+        
         if not text.strip():
             return "Пожалуйста, предоставьте текст для обработки."
         
@@ -97,6 +122,8 @@ class LLMService:
                     text_result = result["result"]["alternatives"][0]["message"]["text"].strip()
                     # Исправляем тире в результате
                     text_result = self.fix_dashes(text_result)
+                    # Сохраняем структуру абзацев в результате
+                    text_result = self.preserve_paragraphs(text_result)
                     logger.info(f"Успешно обработан текст для задачи: {task_type}")
                     return text_result
                 else:
