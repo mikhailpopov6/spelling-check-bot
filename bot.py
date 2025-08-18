@@ -36,15 +36,16 @@ class TextBot:
 ✅ Проверить грамотность текста
 ✅ Улучшить написание текста  
 ✅ Сократить текст с сохранением смысла
+✅ Перевести текст на другие языки
 
 Команды:
 /check [текст] - проверить грамотность
-/check [текст] nodot - проверить грамотность без точек в конце абзацев
 /improve [текст] - улучшить текст
-/improve [текст] nodot - улучшить текст без точек в конце абзацев
 /shorten [текст] - сократить текст
-/shorten [текст] nodot - сократить текст без точек в конце абзацев
+/translate [язык] [текст] - перевести текст (en/uz/am/ru)
 /help - справка
+
+💡 К любой команде можно добавить nodot для удаления точек в конце абзацев
 
 Выберите действие или отправьте текст для обработки:
         """
@@ -53,6 +54,7 @@ class TextBot:
             [InlineKeyboardButton("📝 Проверить грамотность", callback_data="check_grammar")],
             [InlineKeyboardButton("✨ Улучшить текст", callback_data="improve_text")],
             [InlineKeyboardButton("📄 Сократить текст", callback_data="shorten_text")],
+            [InlineKeyboardButton("🌐 Перевод", callback_data="translate")],
             [InlineKeyboardButton("ℹ️ Помощь", callback_data="help")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -70,6 +72,8 @@ class TextBot:
 
 3️⃣ **Сократить текст** - убирает лишние слова, сохраняя основную мысль и грамотность
 
+4️⃣ **Перевод** - переводит текст на английский, узбекский, армянский языки и с любого языка на русский
+
 **Команды:**
 /start - Главное меню
 /help - Эта справка
@@ -79,6 +83,8 @@ class TextBot:
 /improve [текст] nodot - Улучшить текст без точек в конце абзацев
 /shorten [текст] - Сократить текст
 /shorten [текст] nodot - Сократить текст без точек в конце абзацев
+/translate [язык] [текст] - Перевести текст (en/uz/am)
+/translate [язык] [текст] nodot - Перевести текст без точек в конце абзацев
 
 **Как использовать:**
 1. Выберите действие через кнопки или команды
@@ -97,6 +103,9 @@ class TextBot:
 /improve Текст с ошибками nodot
 /shorten Очень длинный текст который нужно сократить
 /shorten Очень длинный текст который нужно сократить nodot
+/translate en Привет мир
+/translate uz Как дела
+/translate am Добрый день
 
 Максимальная длина текста: 4000 символов
         """
@@ -177,6 +186,30 @@ class TextBot:
             self.user_states[user_id] = "waiting_for_text_shorten"
             await update.message.reply_text("📄 Отправьте текст для сокращения:")
     
+    async def translate_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик команды /translate"""
+        user_id = update.effective_user.id
+        
+        # Проверяем, есть ли аргументы после команды
+        if len(context.args) >= 2:
+            # Первый аргумент - язык, остальное - текст
+            target_language = context.args[0].lower()
+            text = ' '.join(context.args[1:])
+            
+            # Проверяем параметр nodot
+            no_dot = 'nodot' in text.lower()
+            if no_dot:
+                # Убираем nodot из текста
+                text = text.replace('nodot', '').replace('NODOT', '').strip()
+            
+            # Обрабатываем многострочные сообщения
+            if text:
+                text = text.replace('\r\n', '\n').replace('\r', '\n')
+            await self.process_translate_text(update, text, target_language, no_dot)
+        else:
+            self.user_states[user_id] = "waiting_for_text_translate"
+            await update.message.reply_text("🌐 Отправьте текст для перевода (укажите язык: en/uz/am/ru):")
+    
     async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /stats (только для админов)"""
         user_id = update.effective_user.id
@@ -228,6 +261,9 @@ class TextBot:
             self.user_states[user_id] = "waiting_for_text_shorten"
             await query.edit_message_text("📄 Отправьте текст для сокращения:")
         
+        elif query.data == "translate":
+            await query.edit_message_text("🌐 Для перевода используйте команду:\n\n/translate [язык] [текст]\n\nПоддерживаемые языки:\n• en - английский\n• uz - узбекский\n• am - армянский\n• ru - русский (автоопределение языка)\n\nПримеры:\n/translate en Привет мир\n/translate ru Hello world\n/translate uz Как дела\n/translate ru Salom dunyo")
+        
         elif query.data == "help":
             help_text = """
 📚 **Как использовать бота:**
@@ -238,6 +274,8 @@ class TextBot:
 
 3️⃣ **Сократить текст** - убирает лишние слова, сохраняя основную мысль и грамотность
 
+4️⃣ **Перевод** - переводит текст на английский, узбекский, армянский языки и с любого языка на русский
+
 **Команды:**
 /start - Главное меню
 /help - Эта справка
@@ -247,6 +285,8 @@ class TextBot:
 /improve [текст] nodot - Улучшить текст без точек в конце абзацев
 /shorten [текст] - Сократить текст
 /shorten [текст] nodot - Сократить текст без точек в конце абзацев
+/translate [язык] [текст] - Перевести текст (en/uz/am/ru)
+/translate [язык] [текст] nodot - Перевести текст без точек в конце абзацев
 
 **Как использовать:**
 1. Выберите действие через кнопки или команды
@@ -260,6 +300,10 @@ class TextBot:
 /improve Текст с ошибками nodot
 /shorten Очень длинный текст который нужно сократить
 /shorten Очень длинный текст который нужно сократить nodot
+/translate en Привет мир
+/translate ru Hello world
+/translate uz Как дела
+/translate ru Salom dunyo
 
 Максимальная длина текста: 4000 символов
             """
@@ -303,6 +347,12 @@ class TextBot:
                 self.user_manager.record_request(user_id, "shorten_text")
                 result = await self.llm_service.shorten_text(text)
                 await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
+            
+            elif state == "waiting_for_text_translate":
+                # Записываем запрос
+                self.user_manager.record_request(user_id, "translate_text")
+                # Показываем инструкцию для перевода
+                await processing_msg.edit_text("🌐 Для перевода используйте команду:\n/translate [язык] [текст]\n\nПоддерживаемые языки:\n• en - английский\n• uz - узбекский\n• am - армянский\n• ru - русский (автоопределение языка)\n\nПримеры:\n/translate en Привет мир\n/translate ru Hello world")
         
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
@@ -358,6 +408,40 @@ class TextBot:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при сокращении текста: {e}")
     
+    async def process_translate_text(self, update: Update, text: str, target_language: str, no_dot: bool = False):
+        """Обрабатывает текст для перевода"""
+        user_id = update.effective_user.id
+        
+        # Записываем запрос
+        self.user_manager.record_request(user_id, "translate_text")
+        
+        # Определяем название языка для отображения
+        language_names = {
+            "en": "английский",
+            "uz": "узбекский", 
+            "am": "армянский",
+            "ru": "русский"
+        }
+        language_name = language_names.get(target_language, target_language)
+        
+        # Определяем направление перевода
+        if target_language == "ru":
+            direction = "на русский"
+            processing_text = "🌐 Перевожу на русский..."
+            result_text = f"🌐 **Перевод на русский:**"
+        else:
+            direction = f"на {language_name}"
+            processing_text = f"🌐 Перевожу {direction}..."
+            result_text = f"🌐 **Перевод {direction}:**"
+        
+        processing_msg = await update.message.reply_text(processing_text)
+        try:
+            result = await self.llm_service.translate_text(text, target_language, no_dot)
+            await processing_msg.edit_text(f"{result_text}\n\n{result}", parse_mode='Markdown')
+        except Exception as e:
+            await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
+            logger.error(f"Ошибка при переводе текста: {e}")
+    
     async def error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик ошибок"""
         logger.error(f"Ошибка: {context.error}")
@@ -382,6 +466,7 @@ def main():
     application.add_handler(CommandHandler("check", bot.check_command))
     application.add_handler(CommandHandler("improve", bot.improve_command))
     application.add_handler(CommandHandler("shorten", bot.shorten_command))
+    application.add_handler(CommandHandler("translate", bot.translate_command))
     application.add_handler(CommandHandler("stats", bot.stats_command))
     
     # Обработчики для кнопок и текста

@@ -197,6 +197,32 @@ class LLMService:
         
         return result
     
+    async def translate_text(self, text: str, target_language: str, no_dot: bool = False) -> str:
+        """Переводит текст на указанный язык"""
+        # Определяем промпт в зависимости от языка
+        if target_language == "ru":
+            prompt_key = "translate_to_ru"
+        else:
+            prompt_key = f"translate_{target_language}"
+            if prompt_key not in ["translate_en", "translate_uz", "translate_am"]:
+                return f"❌ Неподдерживаемый язык: {target_language}. Поддерживаемые языки: en, uz, am, ru"
+        
+        result = await self.process_text(text, prompt_key)
+        
+        # Если указан параметр nodot, убираем точки только в конце абзацев
+        if no_dot:
+            # Разбиваем на абзацы и убираем точки только в конце каждого абзаца
+            paragraphs = result.split('\n')
+            processed_paragraphs = []
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Если абзац не пустой
+                    processed_paragraphs.append(paragraph.rstrip('.'))
+                else:
+                    processed_paragraphs.append(paragraph)  # Сохраняем пустые строки
+            result = '\n'.join(processed_paragraphs)
+        
+        return result
+    
     def get_cost_estimate(self, text_length: int) -> dict:
         """
         Оценивает стоимость обработки текста
