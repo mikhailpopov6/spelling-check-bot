@@ -41,7 +41,9 @@ class TextBot:
 /check [текст] - проверить грамотность
 /check [текст] nodot - проверить грамотность без точек в конце абзацев
 /improve [текст] - улучшить текст
+/improve [текст] nodot - улучшить текст без точек в конце абзацев
 /shorten [текст] - сократить текст
+/shorten [текст] nodot - сократить текст без точек в конце абзацев
 /help - справка
 
 Выберите действие или отправьте текст для обработки:
@@ -74,7 +76,9 @@ class TextBot:
 /check [текст] - Проверить грамотность
 /check [текст] nodot - Проверить грамотность без точек в конце абзацев
 /improve [текст] - Улучшить текст  
+/improve [текст] nodot - Улучшить текст без точек в конце абзацев
 /shorten [текст] - Сократить текст
+/shorten [текст] nodot - Сократить текст без точек в конце абзацев
 
 **Как использовать:**
 1. Выберите действие через кнопки или команды
@@ -90,7 +94,9 @@ class TextBot:
 /check Привет как дела
 /check Привет как дела nodot
 /improve Текст с ошибками
+/improve Текст с ошибками nodot
 /shorten Очень длинный текст который нужно сократить
+/shorten Очень длинный текст который нужно сократить nodot
 
 Максимальная длина текста: 4000 символов
         """
@@ -132,10 +138,16 @@ class TextBot:
             command_length = len('/improve')
             text = full_text[command_length:].strip()
             
+            # Проверяем параметр nodot
+            no_dot = 'nodot' in text.lower()
+            if no_dot:
+                # Убираем nodot из текста
+                text = text.replace('nodot', '').replace('NODOT', '').strip()
+            
             # Обрабатываем многострочные сообщения
             if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
-            await self.process_improve_text(update, text)
+            await self.process_improve_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_improve"
             await update.message.reply_text("✨ Отправьте текст для улучшения:")
@@ -151,10 +163,16 @@ class TextBot:
             command_length = len('/shorten')
             text = full_text[command_length:].strip()
             
+            # Проверяем параметр nodot
+            no_dot = 'nodot' in text.lower()
+            if no_dot:
+                # Убираем nodot из текста
+                text = text.replace('nodot', '').replace('NODOT', '').strip()
+            
             # Обрабатываем многострочные сообщения
             if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
-            await self.process_shorten_text(update, text)
+            await self.process_shorten_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_shorten"
             await update.message.reply_text("📄 Отправьте текст для сокращения:")
@@ -226,7 +244,9 @@ class TextBot:
 /check [текст] - Проверить грамотность
 /check [текст] nodot - Проверить грамотность без точек в конце абзацев
 /improve [текст] - Улучшить текст  
+/improve [текст] nodot - Улучшить текст без точек в конце абзацев
 /shorten [текст] - Сократить текст
+/shorten [текст] nodot - Сократить текст без точек в конце абзацев
 
 **Как использовать:**
 1. Выберите действие через кнопки или команды
@@ -237,7 +257,9 @@ class TextBot:
 /check Привет как дела
 /check Привет как дела nodot
 /improve Текст с ошибками
+/improve Текст с ошибками nodot
 /shorten Очень длинный текст который нужно сократить
+/shorten Очень длинный текст который нужно сократить nodot
 
 Максимальная длина текста: 4000 символов
             """
@@ -306,7 +328,7 @@ class TextBot:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при проверке грамотности: {e}")
     
-    async def process_improve_text(self, update: Update, text: str):
+    async def process_improve_text(self, update: Update, text: str, no_dot: bool = False):
         """Обрабатывает текст для улучшения"""
         user_id = update.effective_user.id
         
@@ -315,13 +337,13 @@ class TextBot:
         
         processing_msg = await update.message.reply_text("🔄 Улучшаю текст...")
         try:
-            result = await self.llm_service.improve_text(text)
+            result = await self.llm_service.improve_text(text, no_dot)
             await processing_msg.edit_text(f"✨ **Улучшенный текст:**\n\n{result}", parse_mode='Markdown')
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при улучшении текста: {e}")
     
-    async def process_shorten_text(self, update: Update, text: str):
+    async def process_shorten_text(self, update: Update, text: str, no_dot: bool = False):
         """Обрабатывает текст для сокращения"""
         user_id = update.effective_user.id
         
@@ -330,7 +352,7 @@ class TextBot:
         
         processing_msg = await update.message.reply_text("🔄 Сокращаю текст...")
         try:
-            result = await self.llm_service.shorten_text(text)
+            result = await self.llm_service.shorten_text(text, no_dot)
             await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")

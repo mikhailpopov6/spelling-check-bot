@@ -161,13 +161,41 @@ class LLMService:
         
         return result
     
-    async def improve_text(self, text: str) -> str:
+    async def improve_text(self, text: str, no_dot: bool = False) -> str:
         """Улучшает текст"""
-        return await self.process_text(text, "improve_text")
+        result = await self.process_text(text, "improve_text")
+        
+        # Если указан параметр nodot, убираем точки только в конце абзацев
+        if no_dot:
+            # Разбиваем на абзацы и убираем точки только в конце каждого абзаца
+            paragraphs = result.split('\n')
+            processed_paragraphs = []
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Если абзац не пустой
+                    processed_paragraphs.append(paragraph.rstrip('.'))
+                else:
+                    processed_paragraphs.append(paragraph)  # Сохраняем пустые строки
+            result = '\n'.join(processed_paragraphs)
+        
+        return result
     
-    async def shorten_text(self, text: str) -> str:
+    async def shorten_text(self, text: str, no_dot: bool = False) -> str:
         """Сокращает текст"""
-        return await self.process_text(text, "shorten_text")
+        result = await self.process_text(text, "shorten_text")
+        
+        # Если указан параметр nodot, убираем точки только в конце абзацев
+        if no_dot:
+            # Разбиваем на абзацы и убираем точки только в конце каждого абзаца
+            paragraphs = result.split('\n')
+            processed_paragraphs = []
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Если абзац не пустой
+                    processed_paragraphs.append(paragraph.rstrip('.'))
+                else:
+                    processed_paragraphs.append(paragraph)  # Сохраняем пустые строки
+            result = '\n'.join(processed_paragraphs)
+        
+        return result
     
     def get_cost_estimate(self, text_length: int) -> dict:
         """
