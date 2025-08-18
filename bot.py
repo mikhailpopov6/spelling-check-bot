@@ -54,14 +54,19 @@ class TextBot:
 **Команды:**
 /start - Главное меню
 /help - Эта справка
-/check - Проверить грамотность
-/improve - Улучшить текст  
-/shorten - Сократить текст
+/check [текст] - Проверить грамотность
+/improve [текст] - Улучшить текст  
+/shorten [текст] - Сократить текст
 
 **Как использовать:**
-1. Выберите действие
-2. Отправьте текст для обработки
+1. Выберите действие через кнопки или команды
+2. Отправьте текст для обработки (или сразу после команды)
 3. Получите результат!
+
+**Примеры:**
+/check Привет как дела
+/improve Текст с ошибками
+/shorten Очень длинный текст который нужно сократить
 
 Максимальная длина текста: 4000 символов
         """
@@ -70,20 +75,38 @@ class TextBot:
     async def check_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /check"""
         user_id = update.effective_user.id
-        self.user_states[user_id] = "waiting_for_text_check"
-        await update.message.reply_text("📝 Отправьте текст для проверки грамотности:")
+        
+        # Проверяем, есть ли текст после команды
+        if context.args:
+            text = ' '.join(context.args)
+            await self.process_check_text(update, text)
+        else:
+            self.user_states[user_id] = "waiting_for_text_check"
+            await update.message.reply_text("📝 Отправьте текст для проверки грамотности:")
     
     async def improve_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /improve"""
         user_id = update.effective_user.id
-        self.user_states[user_id] = "waiting_for_text_improve"
-        await update.message.reply_text("✨ Отправьте текст для улучшения:")
+        
+        # Проверяем, есть ли текст после команды
+        if context.args:
+            text = ' '.join(context.args)
+            await self.process_improve_text(update, text)
+        else:
+            self.user_states[user_id] = "waiting_for_text_improve"
+            await update.message.reply_text("✨ Отправьте текст для улучшения:")
     
     async def shorten_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /shorten"""
         user_id = update.effective_user.id
-        self.user_states[user_id] = "waiting_for_text_shorten"
-        await update.message.reply_text("📄 Отправьте текст для сокращения:")
+        
+        # Проверяем, есть ли текст после команды
+        if context.args:
+            text = ' '.join(context.args)
+            await self.process_shorten_text(update, text)
+        else:
+            self.user_states[user_id] = "waiting_for_text_shorten"
+            await update.message.reply_text("📄 Отправьте текст для сокращения:")
     
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
@@ -117,14 +140,19 @@ class TextBot:
 **Команды:**
 /start - Главное меню
 /help - Эта справка
-/check - Проверить грамотность
-/improve - Улучшить текст  
-/shorten - Сократить текст
+/check [текст] - Проверить грамотность
+/improve [текст] - Улучшить текст  
+/shorten [текст] - Сократить текст
 
 **Как использовать:**
-1. Выберите действие
-2. Отправьте текст для обработки
+1. Выберите действие через кнопки или команды
+2. Отправьте текст для обработки (или сразу после команды)
 3. Получите результат!
+
+**Примеры:**
+/check Привет как дела
+/improve Текст с ошибками
+/shorten Очень длинный текст который нужно сократить
 
 Максимальная длина текста: 4000 символов
             """
@@ -166,6 +194,36 @@ class TextBot:
             # Очищаем состояние пользователя
             if user_id in self.user_states:
                 del self.user_states[user_id]
+    
+    async def process_check_text(self, update: Update, text: str):
+        """Обрабатывает текст для проверки грамотности"""
+        processing_msg = await update.message.reply_text("🔄 Проверяю грамотность...")
+        try:
+            result = await self.llm_service.check_grammar(text)
+            await processing_msg.edit_text(f"✅ **Результат проверки грамотности:**\n\n{result}", parse_mode='Markdown')
+        except Exception as e:
+            await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
+            logger.error(f"Ошибка при проверке грамотности: {e}")
+    
+    async def process_improve_text(self, update: Update, text: str):
+        """Обрабатывает текст для улучшения"""
+        processing_msg = await update.message.reply_text("🔄 Улучшаю текст...")
+        try:
+            result = await self.llm_service.improve_text(text)
+            await processing_msg.edit_text(f"✨ **Улучшенный текст:**\n\n{result}", parse_mode='Markdown')
+        except Exception as e:
+            await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
+            logger.error(f"Ошибка при улучшении текста: {e}")
+    
+    async def process_shorten_text(self, update: Update, text: str):
+        """Обрабатывает текст для сокращения"""
+        processing_msg = await update.message.reply_text("🔄 Сокращаю текст...")
+        try:
+            result = await self.llm_service.shorten_text(text)
+            await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
+        except Exception as e:
+            await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
+            logger.error(f"Ошибка при сокращении текста: {e}")
     
     async def error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик ошибок"""

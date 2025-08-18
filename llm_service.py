@@ -1,6 +1,7 @@
 import requests
 import json
 import logging
+import re
 from config import YANDEX_API_KEY, YANDEX_FOLDER_ID, YANDEX_MODEL, SYSTEM_PROMPTS, MAX_TEXT_LENGTH
 
 # Настройка логирования
@@ -18,6 +19,22 @@ class LLMService:
         self.folder_id = YANDEX_FOLDER_ID
         self.model = YANDEX_MODEL
         self.base_url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    
+    def fix_dashes(self, text: str) -> str:
+        """
+        Заменяет длинные тире (—) на средние тире (-)
+        
+        Args:
+            text: Исходный текст
+        
+        Returns:
+            Текст с исправленными тире
+        """
+        # Заменяем длинные тире на средние
+        text = re.sub(r'—', '-', text)
+        # Также заменяем em dash на обычное тире
+        text = re.sub(r'–', '-', text)
+        return text
     
     async def process_text(self, text: str, task_type: str) -> str:
         """
@@ -78,6 +95,8 @@ class LLMService:
                 result = response.json()
                 if "result" in result and "alternatives" in result["result"]:
                     text_result = result["result"]["alternatives"][0]["message"]["text"].strip()
+                    # Исправляем тире в результате
+                    text_result = self.fix_dashes(text_result)
                     logger.info(f"Успешно обработан текст для задачи: {task_type}")
                     return text_result
                 else:
