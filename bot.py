@@ -37,16 +37,12 @@ class TextBot:
 ✅ Улучшить написание текста  
 ✅ Сократить текст с сохранением смысла
 
-**Команды:**
+Команды:
 /check [текст] - проверить грамотность
+/check [текст] nodot - проверить грамотность без точек в конце абзацев
 /improve [текст] - улучшить текст
 /shorten [текст] - сократить текст
 /help - справка
-
-**Примеры:**
-/check Привет как дела
-/improve Текст с ошибками
-/shorten Очень длинный текст
 
 Выберите действие или отправьте текст для обработки:
         """
@@ -76,6 +72,7 @@ class TextBot:
 /start - Главное меню
 /help - Эта справка
 /check [текст] - Проверить грамотность
+/check [текст] nodot - Проверить грамотность без точек в конце абзацев
 /improve [текст] - Улучшить текст  
 /shorten [текст] - Сократить текст
 
@@ -91,6 +88,7 @@ class TextBot:
 
 **Примеры:**
 /check Привет как дела
+/check Привет как дела nodot
 /improve Текст с ошибками
 /shorten Очень длинный текст который нужно сократить
 
@@ -109,10 +107,16 @@ class TextBot:
             command_length = len('/check')
             text = full_text[command_length:].strip()
             
+            # Проверяем параметр nodot
+            no_dot = 'nodot' in text.lower()
+            if no_dot:
+                # Убираем nodot из текста
+                text = text.replace('nodot', '').replace('NODOT', '').strip()
+            
             # Обрабатываем многострочные сообщения
             if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
-            await self.process_check_text(update, text)
+            await self.process_check_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_check"
             await update.message.reply_text("📝 Отправьте текст для проверки грамотности:")
@@ -220,6 +224,7 @@ class TextBot:
 /start - Главное меню
 /help - Эта справка
 /check [текст] - Проверить грамотность
+/check [текст] nodot - Проверить грамотность без точек в конце абзацев
 /improve [текст] - Улучшить текст  
 /shorten [текст] - Сократить текст
 
@@ -230,6 +235,7 @@ class TextBot:
 
 **Примеры:**
 /check Привет как дела
+/check Привет как дела nodot
 /improve Текст с ошибками
 /shorten Очень длинный текст который нужно сократить
 
@@ -285,7 +291,7 @@ class TextBot:
             if user_id in self.user_states:
                 del self.user_states[user_id]
     
-    async def process_check_text(self, update: Update, text: str):
+    async def process_check_text(self, update: Update, text: str, no_dot: bool = False):
         """Обрабатывает текст для проверки грамотности"""
         user_id = update.effective_user.id
         
@@ -294,7 +300,7 @@ class TextBot:
         
         processing_msg = await update.message.reply_text("🔄 Проверяю грамотность...")
         try:
-            result = await self.llm_service.check_grammar(text)
+            result = await self.llm_service.check_grammar(text, no_dot)
             await processing_msg.edit_text(f"✅ **Результат проверки грамотности:**\n\n{result}", parse_mode='Markdown')
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")

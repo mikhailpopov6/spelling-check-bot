@@ -143,9 +143,23 @@ class LLMService:
             logger.error(f"Ошибка при обработке текста: {e}")
             return f"Произошла ошибка при обработке текста: {str(e)}"
     
-    async def check_grammar(self, text: str) -> str:
+    async def check_grammar(self, text: str, no_dot: bool = False) -> str:
         """Проверяет грамотность текста"""
-        return await self.process_text(text, "check_grammar")
+        result = await self.process_text(text, "check_grammar")
+        
+        # Если указан параметр nodot, убираем точки только в конце абзацев
+        if no_dot:
+            # Разбиваем на абзацы и убираем точки только в конце каждого абзаца
+            paragraphs = result.split('\n')
+            processed_paragraphs = []
+            for paragraph in paragraphs:
+                if paragraph.strip():  # Если абзац не пустой
+                    processed_paragraphs.append(paragraph.rstrip('.'))
+                else:
+                    processed_paragraphs.append(paragraph)  # Сохраняем пустые строки
+            result = '\n'.join(processed_paragraphs)
+        
+        return result
     
     async def improve_text(self, text: str) -> str:
         """Улучшает текст"""
