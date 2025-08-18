@@ -104,9 +104,13 @@ class TextBot:
         
         # Проверяем, есть ли текст после команды
         if context.args:
-            text = ' '.join(context.args)
+            # Получаем полный текст сообщения и убираем команду
+            full_text = update.message.text
+            command_length = len('/check')
+            text = full_text[command_length:].strip()
+            
             # Обрабатываем многострочные сообщения
-            if text and '\n' in text:
+            if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_check_text(update, text)
         else:
@@ -119,9 +123,13 @@ class TextBot:
         
         # Проверяем, есть ли текст после команды
         if context.args:
-            text = ' '.join(context.args)
+            # Получаем полный текст сообщения и убираем команду
+            full_text = update.message.text
+            command_length = len('/improve')
+            text = full_text[command_length:].strip()
+            
             # Обрабатываем многострочные сообщения
-            if text and '\n' in text:
+            if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_improve_text(update, text)
         else:
@@ -134,9 +142,13 @@ class TextBot:
         
         # Проверяем, есть ли текст после команды
         if context.args:
-            text = ' '.join(context.args)
+            # Получаем полный текст сообщения и убираем команду
+            full_text = update.message.text
+            command_length = len('/shorten')
+            text = full_text[command_length:].strip()
+            
             # Обрабатываем многострочные сообщения
-            if text and '\n' in text:
+            if text:
                 text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_shorten_text(update, text)
         else:
