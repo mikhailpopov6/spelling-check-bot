@@ -22,7 +22,7 @@ class LLMService:
     
     def fix_dashes(self, text: str) -> str:
         """
-        Заменяет длинные тире (—) на средние тире (-)
+        Заменяет длинные тире (—) на средние тире (–)
         
         Args:
             text: Исходный текст
@@ -30,10 +30,10 @@ class LLMService:
         Returns:
             Текст с исправленными тире
         """
-        # Заменяем длинные тире на средние
-        text = re.sub(r'—', '-', text)
-        # Также заменяем em dash на обычное тире
-        text = re.sub(r'–', '-', text)
+        # Заменяем длинные тире (em dash) на средние тире (en dash)
+        text = re.sub(r'—', '–', text)
+        # Также заменяем обычные тире на средние тире для единообразия
+        text = re.sub(r'(?<![\w])-(?![\w])', '–', text)
         return text
     
     async def process_text(self, text: str, task_type: str) -> str:

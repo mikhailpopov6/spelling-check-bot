@@ -4,6 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 from config import TELEGRAM_TOKEN
 from llm_service import LLMService
+from user_manager import UserManager
 
 # Настройка логирования
 logging.basicConfig(
@@ -15,10 +16,19 @@ logger = logging.getLogger(__name__)
 class TextBot:
     def __init__(self):
         self.llm_service = LLMService()
+        self.user_manager = UserManager()
         self.user_states = {}  # Для отслеживания состояния пользователей
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /start"""
+        # Регистрируем пользователя
+        user = update.effective_user
+        self.user_manager.get_or_create_user(
+            user.id, 
+            user.username, 
+            user.first_name
+        )
+        
         welcome_text = """
 🤖 Добро пожаловать в бота для работы с русскими текстами!
 
@@ -26,6 +36,17 @@ class TextBot:
 ✅ Проверить грамотность текста
 ✅ Улучшить написание текста  
 ✅ Сократить текст с сохранением смысла
+
+**Команды:**
+/check [текст] - проверить грамотность
+/improve [текст] - улучшить текст
+/shorten [текст] - сократить текст
+/help - справка
+
+**Примеры:**
+/check Привет как дела
+/improve Текст с ошибками
+/shorten Очень длинный текст
 
 Выберите действие или отправьте текст для обработки:
         """
@@ -108,6 +129,38 @@ class TextBot:
             self.user_states[user_id] = "waiting_for_text_shorten"
             await update.message.reply_text("📄 Отправьте текст для сокращения:")
     
+    async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик команды /stats (только для админов)"""
+        user_id = update.effective_user.id
+        
+        if not self.user_manager.is_admin(user_id):
+            await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+            return
+        
+        stats = self.user_manager.get_stats()
+        
+        stats_text = f"""
+📊 **Статистика бота**
+
+👥 **Пользователи:**
+• Всего пользователей: {stats['total_users']}
+
+📈 **Запросы:**
+• Всего запросов: {stats['total_requests']}
+• За сегодня: {stats['today_requests']}
+• За неделю: {stats['week_requests']}
+
+🏆 **Топ-5 пользователей:**
+"""
+        
+        for i, user in enumerate(stats['top_users'], 1):
+            username = user.get('username', 'Без username')
+            first_name = user.get('first_name', 'Неизвестно')
+            total_requests = user['requests']['total']
+            stats_text += f"{i}. @{username} ({first_name}) - {total_requests} запросов\n"
+        
+        await update.message.reply_text(stats_text, parse_mode='Markdown')
+    
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
         query = update.callback_query
@@ -175,14 +228,20 @@ class TextBot:
         
         try:
             if state == "waiting_for_text_check":
+                # Записываем запрос
+                self.user_manager.record_request(user_id, "check_grammar")
                 result = await self.llm_service.check_grammar(text)
                 await processing_msg.edit_text(f"✅ **Результат проверки грамотности:**\n\n{result}", parse_mode='Markdown')
             
             elif state == "waiting_for_text_improve":
+                # Записываем запрос
+                self.user_manager.record_request(user_id, "improve_text")
                 result = await self.llm_service.improve_text(text)
                 await processing_msg.edit_text(f"✨ **Улучшенный текст:**\n\n{result}", parse_mode='Markdown')
             
             elif state == "waiting_for_text_shorten":
+                # Записываем запрос
+                self.user_manager.record_request(user_id, "shorten_text")
                 result = await self.llm_service.shorten_text(text)
                 await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
         
@@ -197,6 +256,11 @@ class TextBot:
     
     async def process_check_text(self, update: Update, text: str):
         """Обрабатывает текст для проверки грамотности"""
+        user_id = update.effective_user.id
+        
+        # Записываем запрос
+        self.user_manager.record_request(user_id, "check_grammar")
+        
         processing_msg = await update.message.reply_text("🔄 Проверяю грамотность...")
         try:
             result = await self.llm_service.check_grammar(text)
@@ -207,6 +271,11 @@ class TextBot:
     
     async def process_improve_text(self, update: Update, text: str):
         """Обрабатывает текст для улучшения"""
+        user_id = update.effective_user.id
+        
+        # Записываем запрос
+        self.user_manager.record_request(user_id, "improve_text")
+        
         processing_msg = await update.message.reply_text("🔄 Улучшаю текст...")
         try:
             result = await self.llm_service.improve_text(text)
@@ -217,6 +286,11 @@ class TextBot:
     
     async def process_shorten_text(self, update: Update, text: str):
         """Обрабатывает текст для сокращения"""
+        user_id = update.effective_user.id
+        
+        # Записываем запрос
+        self.user_manager.record_request(user_id, "shorten_text")
+        
         processing_msg = await update.message.reply_text("🔄 Сокращаю текст...")
         try:
             result = await self.llm_service.shorten_text(text)
@@ -249,6 +323,7 @@ def main():
     application.add_handler(CommandHandler("check", bot.check_command))
     application.add_handler(CommandHandler("improve", bot.improve_command))
     application.add_handler(CommandHandler("shorten", bot.shorten_command))
+    application.add_handler(CommandHandler("stats", bot.stats_command))
     
     # Обработчики для кнопок и текста
     application.add_handler(CallbackQueryHandler(bot.button_callback))

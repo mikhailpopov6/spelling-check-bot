@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# User data
+users.json
+
 # Python
 __pycache__/
 *.py[cod]
