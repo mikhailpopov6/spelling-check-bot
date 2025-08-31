@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 from config import TELEGRAM_TOKEN
 from llm_service import LLMService
 from user_manager import UserManager
+from telegram_utils import TelegramFormatter
 
 # Настройка логирования
 logging.basicConfig(
@@ -115,22 +116,31 @@ class TextBot:
         """Обработчик команды /check"""
         user_id = update.effective_user.id
         
-        # Проверяем, есть ли текст после команды
-        if context.args:
-            # Получаем полный текст сообщения и убираем команду
-            full_text = update.message.text
-            command_length = len('/check')
-            text = full_text[command_length:].strip()
-            
-            # Проверяем параметр nodot
-            no_dot = 'nodot' in text.lower()
-            if no_dot:
-                # Убираем nodot из текста
-                text = text.replace('nodot', '').replace('NODOT', '').strip()
-            
-            # Обрабатываем многострочные сообщения
-            if text:
-                text = text.replace('\r\n', '\n').replace('\r', '\n')
+        # Проверяем пересланное сообщение
+        if update.message.forward_from or update.message.forward_from_chat:
+            # Если это пересланное сообщение, берем текст из него
+            text = update.message.text or ""
+            if text.startswith('/check'):
+                text = text[7:].strip()  # Убираем '/check '
+        else:
+            # Проверяем, есть ли текст после команды
+            if context.args:
+                # Получаем полный текст сообщения и убираем команду
+                full_text = update.message.text
+                command_length = len('/check')
+                text = full_text[command_length:].strip()
+            else:
+                text = ""
+        
+        # Проверяем параметр nodot
+        no_dot = 'nodot' in text.lower()
+        if no_dot:
+            # Убираем nodot из текста
+            text = text.replace('nodot', '').replace('NODOT', '').strip()
+        
+        # Обрабатываем многострочные сообщения
+        if text:
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_check_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_check"
@@ -140,22 +150,31 @@ class TextBot:
         """Обработчик команды /improve"""
         user_id = update.effective_user.id
         
-        # Проверяем, есть ли текст после команды
-        if context.args:
-            # Получаем полный текст сообщения и убираем команду
-            full_text = update.message.text
-            command_length = len('/improve')
-            text = full_text[command_length:].strip()
-            
-            # Проверяем параметр nodot
-            no_dot = 'nodot' in text.lower()
-            if no_dot:
-                # Убираем nodot из текста
-                text = text.replace('nodot', '').replace('NODOT', '').strip()
-            
-            # Обрабатываем многострочные сообщения
-            if text:
-                text = text.replace('\r\n', '\n').replace('\r', '\n')
+        # Проверяем пересланное сообщение
+        if update.message.forward_from or update.message.forward_from_chat:
+            # Если это пересланное сообщение, берем текст из него
+            text = update.message.text or ""
+            if text.startswith('/improve'):
+                text = text[10:].strip()  # Убираем '/improve '
+        else:
+            # Проверяем, есть ли текст после команды
+            if context.args:
+                # Получаем полный текст сообщения и убираем команду
+                full_text = update.message.text
+                command_length = len('/improve')
+                text = full_text[command_length:].strip()
+            else:
+                text = ""
+        
+        # Проверяем параметр nodot
+        no_dot = 'nodot' in text.lower()
+        if no_dot:
+            # Убираем nodot из текста
+            text = text.replace('nodot', '').replace('NODOT', '').strip()
+        
+        # Обрабатываем многострочные сообщения
+        if text:
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_improve_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_improve"
@@ -165,22 +184,31 @@ class TextBot:
         """Обработчик команды /shorten"""
         user_id = update.effective_user.id
         
-        # Проверяем, есть ли текст после команды
-        if context.args:
-            # Получаем полный текст сообщения и убираем команду
-            full_text = update.message.text
-            command_length = len('/shorten')
-            text = full_text[command_length:].strip()
-            
-            # Проверяем параметр nodot
-            no_dot = 'nodot' in text.lower()
-            if no_dot:
-                # Убираем nodot из текста
-                text = text.replace('nodot', '').replace('NODOT', '').strip()
-            
-            # Обрабатываем многострочные сообщения
-            if text:
-                text = text.replace('\r\n', '\n').replace('\r', '\n')
+        # Проверяем пересланное сообщение
+        if update.message.forward_from or update.message.forward_from_chat:
+            # Если это пересланное сообщение, берем текст из него
+            text = update.message.text or ""
+            if text.startswith('/shorten'):
+                text = text[9:].strip()  # Убираем '/shorten '
+        else:
+            # Проверяем, есть ли текст после команды
+            if context.args:
+                # Получаем полный текст сообщения и убираем команду
+                full_text = update.message.text
+                command_length = len('/shorten')
+                text = full_text[command_length:].strip()
+            else:
+                text = ""
+        
+        # Проверяем параметр nodot
+        no_dot = 'nodot' in text.lower()
+        if no_dot:
+            # Убираем nodot из текста
+            text = text.replace('nodot', '').replace('NODOT', '').strip()
+        
+        # Обрабатываем многострочные сообщения
+        if text:
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_shorten_text(update, text, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_shorten"
@@ -190,21 +218,42 @@ class TextBot:
         """Обработчик команды /translate"""
         user_id = update.effective_user.id
         
-        # Проверяем, есть ли аргументы после команды
-        if len(context.args) >= 2:
-            # Первый аргумент - язык, остальное - текст
-            target_language = context.args[0].lower()
-            text = ' '.join(context.args[1:])
-            
-            # Проверяем параметр nodot
-            no_dot = 'nodot' in text.lower()
-            if no_dot:
-                # Убираем nodot из текста
-                text = text.replace('nodot', '').replace('NODOT', '').strip()
-            
-            # Обрабатываем многострочные сообщения
-            if text:
-                text = text.replace('\r\n', '\n').replace('\r', '\n')
+        # Проверяем пересланное сообщение
+        if update.message.forward_from or update.message.forward_from_chat:
+            # Если это пересланное сообщение, берем текст из него
+            full_text = update.message.text or ""
+            if full_text.startswith('/translate'):
+                # Убираем '/translate ' и разбираем аргументы
+                args_text = full_text[11:].strip()
+                args = args_text.split()
+                if len(args) >= 2:
+                    target_language = args[0].lower()
+                    text = ' '.join(args[1:])
+                else:
+                    text = ""
+                    target_language = ""
+            else:
+                text = ""
+                target_language = ""
+        else:
+            # Проверяем, есть ли аргументы после команды
+            if len(context.args) >= 2:
+                # Первый аргумент - язык, остальное - текст
+                target_language = context.args[0].lower()
+                text = ' '.join(context.args[1:])
+            else:
+                text = ""
+                target_language = ""
+        
+        # Проверяем параметр nodot
+        no_dot = 'nodot' in text.lower()
+        if no_dot:
+            # Убираем nodot из текста
+            text = text.replace('nodot', '').replace('NODOT', '').strip()
+        
+        # Обрабатываем многострочные сообщения
+        if text and target_language:
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
             await self.process_translate_text(update, text, target_language, no_dot)
         else:
             self.user_states[user_id] = "waiting_for_text_translate"
@@ -212,35 +261,44 @@ class TextBot:
     
     async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик команды /stats (только для админов)"""
-        user_id = update.effective_user.id
-        
-        if not self.user_manager.is_admin(user_id):
-            await update.message.reply_text("❌ У вас нет доступа к этой команде.")
-            return
-        
-        stats = self.user_manager.get_stats()
-        
-        stats_text = f"""
+        try:
+            user_id = update.effective_user.id
+            
+            if not self.user_manager.is_admin(user_id):
+                await update.message.reply_text("❌ У вас нет доступа к этой команде.")
+                return
+            
+            stats = self.user_manager.get_stats()
+            
+            stats_text = f"""
 📊 **Статистика бота**
 
 👥 **Пользователи:**
-• Всего пользователей: {stats['total_users']}
+• Всего пользователей: {stats.get('total_users', 0)}
 
 📈 **Запросы:**
-• Всего запросов: {stats['total_requests']}
-• За сегодня: {stats['today_requests']}
-• За неделю: {stats['week_requests']}
+• Всего запросов: {stats.get('total_requests', 0)}
+• За сегодня: {stats.get('today_requests', 0)}
+• За неделю: {stats.get('week_requests', 0)}
 
 🏆 **Топ-5 пользователей:**
 """
-        
-        for i, user in enumerate(stats['top_users'], 1):
-            username = user.get('username', 'Без username')
-            first_name = user.get('first_name', 'Неизвестно')
-            total_requests = user['requests']['total']
-            stats_text += f"{i}. @{username} ({first_name}) - {total_requests} запросов\n"
-        
-        await update.message.reply_text(stats_text, parse_mode='Markdown')
+            
+            top_users = stats.get('top_users', [])
+            if top_users:
+                for i, user in enumerate(top_users, 1):
+                    username = user.get('username', 'Без username')
+                    first_name = user.get('first_name', 'Неизвестно')
+                    total_requests = user.get('requests', {}).get('total', 0)
+                    stats_text += f"{i}. @{username} ({first_name}) - {total_requests} запросов\n"
+            else:
+                stats_text += "Пока нет данных о пользователях\n"
+            
+            await update.message.reply_text(stats_text, parse_mode='Markdown')
+            
+        except Exception as e:
+            logger.error(f"Ошибка в команде stats: {e}")
+            await update.message.reply_text("❌ Произошла ошибка при получении статистики. Проверьте логи.")
     
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
@@ -249,6 +307,29 @@ class TextBot:
         
         user_id = query.from_user.id
         
+        # Обработка пересланных сообщений
+        if query.data.startswith("forward_"):
+            action = query.data.split("_")[1]
+            
+            # Получаем сохраненный текст
+            if user_id in self.user_states and self.user_states[user_id].startswith("forwarded_text:"):
+                text = self.user_states[user_id].replace("forwarded_text:", "")
+                
+                if action == "check":
+                    await self.process_check_text(update, text, False)
+                elif action == "improve":
+                    await self.process_improve_text(update, text, False)
+                elif action == "shorten":
+                    await self.process_shorten_text(update, text, False)
+                elif action == "translate":
+                    await query.edit_message_text("🌐 Для перевода используйте команду:\n\n/translate [язык] [текст]\n\nПоддерживаемые языки:\n• en - английский\n• uz - узбекский\n• am - армянский\n• ru - русский (автоопределение языка)\n\nПримеры:\n/translate en Привет мир\n/translate ru Hello world")
+                
+                # Очищаем состояние
+                if user_id in self.user_states:
+                    del self.user_states[user_id]
+                return
+        
+        # Обычные кнопки
         if query.data == "check_grammar":
             self.user_states[user_id] = "waiting_for_text_check"
             await query.edit_message_text("📝 Отправьте текст для проверки грамотности:")
@@ -312,7 +393,10 @@ class TextBot:
     async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик текстовых сообщений"""
         user_id = update.effective_user.id
-        text = update.message.text
+        message = update.message
+        
+        # Извлекаем текст и форматирование
+        text, entities = TelegramFormatter.extract_text_and_entities(message)
         
         # Обрабатываем многострочные сообщения
         if text and '\n' in text:
@@ -330,23 +414,26 @@ class TextBot:
         processing_msg = await update.message.reply_text("🔄 Обрабатываю текст...")
         
         try:
+            # Очищаем текст от форматирования для LLM
+            clean_text = TelegramFormatter.clean_formatting_for_llm(text)
+            
             if state == "waiting_for_text_check":
                 # Записываем запрос
                 self.user_manager.record_request(user_id, "check_grammar")
-                result = await self.llm_service.check_grammar(text)
-                await processing_msg.edit_text(f"✅ **Результат проверки грамотности:**\n\n{result}", parse_mode='Markdown')
+                result = await self.llm_service.check_grammar(clean_text)
+                await self.send_result_message(update, result, "check", processing_msg)
             
             elif state == "waiting_for_text_improve":
                 # Записываем запрос
                 self.user_manager.record_request(user_id, "improve_text")
-                result = await self.llm_service.improve_text(text)
-                await processing_msg.edit_text(f"✨ **Улучшенный текст:**\n\n{result}", parse_mode='Markdown')
+                result = await self.llm_service.improve_text(clean_text)
+                await self.send_result_message(update, result, "improve", processing_msg)
             
             elif state == "waiting_for_text_shorten":
                 # Записываем запрос
                 self.user_manager.record_request(user_id, "shorten_text")
-                result = await self.llm_service.shorten_text(text)
-                await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
+                result = await self.llm_service.shorten_text(clean_text)
+                await self.send_result_message(update, result, "shorten", processing_msg)
             
             elif state == "waiting_for_text_translate":
                 # Записываем запрос
@@ -363,6 +450,65 @@ class TextBot:
             if user_id in self.user_states:
                 del self.user_states[user_id]
     
+    async def send_result_message(self, update: Update, result: str, operation: str, processing_msg=None):
+        """Отправляет результат отдельным сообщением"""
+        try:
+            # Удаляем сообщение о обработке
+            if processing_msg:
+                await processing_msg.delete()
+            
+            # Разбиваем длинное сообщение на части
+            parts = TelegramFormatter.split_long_message(result)
+            
+            if len(parts) == 1:
+                # Отправляем одно сообщение
+                await update.message.reply_text(result, parse_mode='Markdown')
+            else:
+                # Отправляем несколько частей
+                for i, part in enumerate(parts, 1):
+                    if i == 1:
+                        await update.message.reply_text(f"📄 **Часть {i}/{len(parts)}:**\n\n{part}", parse_mode='Markdown')
+                    else:
+                        await update.message.reply_text(f"📄 **Часть {i}/{len(parts)}:**\n\n{part}", parse_mode='Markdown')
+        
+        except Exception as e:
+            logger.error(f"Ошибка при отправке результата: {e}")
+            await update.message.reply_text(f"❌ Ошибка при отправке результата: {str(e)}")
+    
+    async def handle_forwarded_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик пересланных сообщений"""
+        user_id = update.effective_user.id
+        message = update.message
+        
+        # Извлекаем текст и форматирование
+        text, entities = TelegramFormatter.extract_text_and_entities(message)
+        
+        # Обрабатываем многострочные сообщения
+        if text and '\n' in text:
+            text = text.replace('\r\n', '\n').replace('\r', '\n')
+        
+        if not text:
+            await update.message.reply_text("❌ Пересланное сообщение не содержит текста.")
+            return
+        
+        # Показываем меню выбора действия
+        keyboard = [
+            [InlineKeyboardButton("📝 Проверить грамотность", callback_data=f"forward_check:{text[:50]}...")],
+            [InlineKeyboardButton("✨ Улучшить текст", callback_data=f"forward_improve:{text[:50]}...")],
+            [InlineKeyboardButton("📄 Сократить текст", callback_data=f"forward_shorten:{text[:50]}...")],
+            [InlineKeyboardButton("🌐 Перевод", callback_data=f"forward_translate:{text[:50]}...")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            f"📤 **Пересланное сообщение:**\n\n{text[:200]}{'...' if len(text) > 200 else ''}\n\nВыберите действие:",
+            reply_markup=reply_markup,
+            parse_mode='Markdown'
+        )
+        
+        # Сохраняем полный текст для обработки
+        self.user_states[user_id] = f"forwarded_text:{text}"
+    
     async def process_check_text(self, update: Update, text: str, no_dot: bool = False):
         """Обрабатывает текст для проверки грамотности"""
         user_id = update.effective_user.id
@@ -373,7 +519,7 @@ class TextBot:
         processing_msg = await update.message.reply_text("🔄 Проверяю грамотность...")
         try:
             result = await self.llm_service.check_grammar(text, no_dot)
-            await processing_msg.edit_text(f"✅ **Результат проверки грамотности:**\n\n{result}", parse_mode='Markdown')
+            await self.send_result_message(update, result, "check", processing_msg)
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при проверке грамотности: {e}")
@@ -388,7 +534,7 @@ class TextBot:
         processing_msg = await update.message.reply_text("🔄 Улучшаю текст...")
         try:
             result = await self.llm_service.improve_text(text, no_dot)
-            await processing_msg.edit_text(f"✨ **Улучшенный текст:**\n\n{result}", parse_mode='Markdown')
+            await self.send_result_message(update, result, "improve", processing_msg)
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при улучшении текста: {e}")
@@ -403,7 +549,7 @@ class TextBot:
         processing_msg = await update.message.reply_text("🔄 Сокращаю текст...")
         try:
             result = await self.llm_service.shorten_text(text, no_dot)
-            await processing_msg.edit_text(f"📄 **Сокращенный текст:**\n\n{result}", parse_mode='Markdown')
+            await self.send_result_message(update, result, "shorten", processing_msg)
         except Exception as e:
             await processing_msg.edit_text(f"❌ Произошла ошибка: {str(e)}")
             logger.error(f"Ошибка при сокращении текста: {e}")
@@ -472,6 +618,9 @@ def main():
     # Обработчики для кнопок и текста
     application.add_handler(CallbackQueryHandler(bot.button_callback))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.handle_text))
+    
+    # Обработчик пересланных сообщений
+    application.add_handler(MessageHandler(filters.FORWARDED & filters.TEXT, bot.handle_forwarded_message))
     
     # Обработчик ошибок
     application.add_error_handler(bot.error_handler)

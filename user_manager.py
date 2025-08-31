@@ -112,25 +112,50 @@ class UserManager:
     
     def get_stats(self) -> Dict:
         """Получает общую статистику по всем пользователям"""
-        total_users = len(self.users)
-        total_requests = sum(user["requests"]["total"] for user in self.users.values())
-        today_requests = sum(user["requests"]["today"] for user in self.users.values())
-        week_requests = sum(user["requests"]["week"] for user in self.users.values())
-        
-        # Топ пользователей по запросам
-        top_users = sorted(
-            self.users.values(),
-            key=lambda x: x["requests"]["total"],
-            reverse=True
-        )[:5]
-        
-        return {
-            "total_users": total_users,
-            "total_requests": total_requests,
-            "today_requests": today_requests,
-            "week_requests": week_requests,
-            "top_users": top_users
-        }
+        try:
+            total_users = len(self.users)
+            total_requests = 0
+            today_requests = 0
+            week_requests = 0
+            
+            # Безопасно подсчитываем статистику
+            for user in self.users.values():
+                try:
+                    requests = user.get("requests", {})
+                    total_requests += requests.get("total", 0)
+                    today_requests += requests.get("today", 0)
+                    week_requests += requests.get("week", 0)
+                except Exception as e:
+                    logger.error(f"Ошибка при обработке пользователя {user.get('user_id', 'unknown')}: {e}")
+                    continue
+            
+            # Топ пользователей по запросам
+            try:
+                top_users = sorted(
+                    self.users.values(),
+                    key=lambda x: x.get("requests", {}).get("total", 0),
+                    reverse=True
+                )[:5]
+            except Exception as e:
+                logger.error(f"Ошибка при сортировке пользователей: {e}")
+                top_users = []
+            
+            return {
+                "total_users": total_users,
+                "total_requests": total_requests,
+                "today_requests": today_requests,
+                "week_requests": week_requests,
+                "top_users": top_users
+            }
+        except Exception as e:
+            logger.error(f"Ошибка в get_stats: {e}")
+            return {
+                "total_users": 0,
+                "total_requests": 0,
+                "today_requests": 0,
+                "week_requests": 0,
+                "top_users": []
+            }
     
     def get_user_stats(self, user_id: int) -> Optional[Dict]:
         """Получает статистику конкретного пользователя"""
