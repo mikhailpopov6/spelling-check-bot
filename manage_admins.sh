@@ -1,4 +1,4 @@
-#!/bin/bash
+от#!/bin/bash
 
 ADMINS_FILE="/root/spelling-check-bot/admins.json"
 

@@ -466,15 +466,28 @@ class TextBot:
             parts = TelegramFormatter.split_long_message(result)
             
             if len(parts) == 1:
-                # Отправляем одно сообщение
-                await update.message.reply_text(result)
+                # Отправляем одно сообщение с Markdown форматированием
+                try:
+                    await update.message.reply_text(result, parse_mode='Markdown')
+                except Exception as parse_error:
+                    # Если Markdown не работает, отправляем как обычный текст
+                    logger.warning(f"Ошибка Markdown парсинга, отправляем как обычный текст: {parse_error}")
+                    await update.message.reply_text(result)
             else:
                 # Отправляем несколько частей
                 for i, part in enumerate(parts, 1):
-                    if i == 1:
-                        await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
-                    else:
-                        await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
+                    try:
+                        if i == 1:
+                            await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}", parse_mode='Markdown')
+                        else:
+                            await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}", parse_mode='Markdown')
+                    except Exception as parse_error:
+                        # Если Markdown не работает, отправляем как обычный текст
+                        logger.warning(f"Ошибка Markdown парсинга для части {i}, отправляем как обычный текст: {parse_error}")
+                        if i == 1:
+                            await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
+                        else:
+                            await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
         
         except Exception as e:
             logger.error(f"Ошибка при отправке результата: {e}")
@@ -496,7 +509,48 @@ class TextBot:
             await update.message.reply_text("❌ Пересланное сообщение не содержит текста.")
             return
         
-        # Показываем меню выбора действия
+        # Проверяем, есть ли команда в тексте
+        if text.startswith('/check'):
+            # Обрабатываем как команду /check
+            command_text = text[7:].strip()  # Убираем '/check '
+            if command_text:
+                await self.process_check_text(update, command_text)
+            else:
+                self.user_states[user_id] = "waiting_for_text_check"
+                await update.message.reply_text("📝 Отправьте текст для проверки грамотности:")
+            return
+        elif text.startswith('/improve'):
+            # Обрабатываем как команду /improve
+            command_text = text[10:].strip()  # Убираем '/improve '
+            if command_text:
+                await self.process_improve_text(update, command_text)
+            else:
+                self.user_states[user_id] = "waiting_for_text_improve"
+                await update.message.reply_text("✨ Отправьте текст для улучшения:")
+            return
+        elif text.startswith('/shorten'):
+            # Обрабатываем как команду /shorten
+            command_text = text[9:].strip()  # Убираем '/shorten '
+            if command_text:
+                await self.process_shorten_text(update, command_text)
+            else:
+                self.user_states[user_id] = "waiting_for_text_shorten"
+                await update.message.reply_text("📄 Отправьте текст для сокращения:")
+            return
+        elif text.startswith('/translate'):
+            # Обрабатываем как команду /translate
+            args_text = text[11:].strip()  # Убираем '/translate '
+            args = args_text.split()
+            if len(args) >= 2:
+                target_language = args[0].lower()
+                command_text = ' '.join(args[1:])
+                await self.process_translate_text(update, command_text, target_language)
+            else:
+                self.user_states[user_id] = "waiting_for_text_translate"
+                await update.message.reply_text("🌐 Отправьте текст для перевода (укажите язык: en/uz/am/ru):")
+            return
+        
+        # Если это просто пересланное сообщение без команды, показываем меню выбора действия
         keyboard = [
             [InlineKeyboardButton("📝 Проверить грамотность", callback_data=f"forward_check:{text[:50]}...")],
             [InlineKeyboardButton("✨ Улучшить текст", callback_data=f"forward_improve:{text[:50]}...")],
