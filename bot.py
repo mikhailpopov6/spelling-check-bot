@@ -270,17 +270,17 @@ class TextBot:
             
             stats = self.user_manager.get_stats()
             
-            stats_text = f"""📊 Статистика бота
+            stats_text = f"""📊 **Статистика бота**
 
-👥 Пользователи:
-• Всего пользователей: {stats.get('total_users', 0)}
+👥 **Пользователи:**
+• Всего пользователей: `{stats.get('total_users', 0)}`
 
-📈 Запросы:
-• Всего запросов: {stats.get('total_requests', 0)}
-• За сегодня: {stats.get('today_requests', 0)}
-• За неделю: {stats.get('week_requests', 0)}
+📈 **Запросы:**
+• Всего запросов: `{stats.get('total_requests', 0)}`
+• За сегодня: `{stats.get('today_requests', 0)}`
+• За неделю: `{stats.get('week_requests', 0)}`
 
-🏆 Топ-5 пользователей:"""
+🏆 **Топ-5 пользователей:**"""
             
             top_users = stats.get('top_users', [])
             if top_users:
@@ -288,14 +288,23 @@ class TextBot:
                     username = user.get('username', 'Без username')
                     first_name = user.get('first_name', 'Неизвестно')
                     total_requests = user.get('requests', {}).get('total', 0)
-                    # Экранируем специальные символы для безопасности
-                    username = (username or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
-                    first_name = (first_name or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
-                    stats_text += f"\n{i}. @{username} ({first_name}) - {total_requests} запросов"
+                    
+                    # Безопасно форматируем username для ссылки
+                    if username and username != 'Без username':
+                        # Экранируем специальные символы в username
+                        safe_username = username.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
+                        user_link = f"@{safe_username}"
+                    else:
+                        user_link = "Без username"
+                    
+                    # Экранируем специальные символы в имени
+                    safe_first_name = (first_name or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
+                    
+                    stats_text += f"\n{i}. {user_link} \\(`{safe_first_name}`\\) \\- `{total_requests}` запросов"
             else:
                 stats_text += "\nПока нет данных о пользователях"
             
-            await update.message.reply_text(stats_text)
+            await update.message.reply_text(stats_text, parse_mode='MarkdownV2')
             
         except Exception as e:
             logger.error(f"Ошибка в команде stats: {e}")
@@ -463,14 +472,14 @@ class TextBot:
             
             if len(parts) == 1:
                 # Отправляем одно сообщение
-                await update.message.reply_text(result, parse_mode='Markdown')
+                await update.message.reply_text(result)
             else:
                 # Отправляем несколько частей
                 for i, part in enumerate(parts, 1):
                     if i == 1:
-                        await update.message.reply_text(f"📄 **Часть {i}/{len(parts)}:**\n\n{part}", parse_mode='Markdown')
+                        await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
                     else:
-                        await update.message.reply_text(f"📄 **Часть {i}/{len(parts)}:**\n\n{part}", parse_mode='Markdown')
+                        await update.message.reply_text(f"📄 Часть {i}/{len(parts)}:\n\n{part}")
         
         except Exception as e:
             logger.error(f"Ошибка при отправке результата: {e}")
@@ -502,9 +511,8 @@ class TextBot:
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.message.reply_text(
-            f"📤 **Пересланное сообщение:**\n\n{text[:200]}{'...' if len(text) > 200 else ''}\n\nВыберите действие:",
-            reply_markup=reply_markup,
-            parse_mode='Markdown'
+            f"📤 Пересланное сообщение:\n\n{text[:200]}{'...' if len(text) > 200 else ''}\n\nВыберите действие:",
+            reply_markup=reply_markup
         )
         
         # Сохраняем полный текст для обработки
