@@ -291,16 +291,20 @@ class TextBot:
                     
                     # Безопасно форматируем username для ссылки
                     if username and username != 'Без username':
-                        # Экранируем специальные символы в username
+                        # Экранируем специальные символы в username для MarkdownV2
                         safe_username = username.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
                         user_link = f"@{safe_username}"
                     else:
                         user_link = "Без username"
                     
-                    # Экранируем специальные символы в имени
+                    # Экранируем специальные символы в имени для MarkdownV2
                     safe_first_name = (first_name or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
                     
-                    stats_text += f"\n{i}. {user_link} \\(`{safe_first_name}`\\) \\- `{total_requests}` запросов"
+                    # Экранируем все символы в строке статистики
+                    safe_stats_line = f"{i}. {user_link} ({safe_first_name}) - {total_requests} запросов"
+                    safe_stats_line = safe_stats_line.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
+                    
+                    stats_text += f"\n{safe_stats_line}"
             else:
                 stats_text += "\nПока нет данных о пользователях"
             
