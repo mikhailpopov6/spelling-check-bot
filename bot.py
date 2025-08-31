@@ -289,8 +289,8 @@ class TextBot:
                     first_name = user.get('first_name', 'Неизвестно')
                     total_requests = user.get('requests', {}).get('total', 0)
                     # Экранируем специальные символы для безопасности
-                    username = username.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
-                    first_name = first_name.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
+                    username = (username or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
+                    first_name = (first_name or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
                     stats_text += f"\n{i}. @{username} ({first_name}) - {total_requests} запросов"
             else:
                 stats_text += "\nПока нет данных о пользователях"
