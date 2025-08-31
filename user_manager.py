@@ -11,11 +11,22 @@ class UserManager:
         self.data_file = data_file
         self.users = self.load_users()
         
-        # Админы (Telegram ID)
-        self.admins = [
-            123456789,  # Замените на ваш Telegram ID
-            # Добавьте других админов здесь
-        ]
+        # Загружаем список администраторов из файла
+        self.admins = self.load_admins()
+    
+    def load_admins(self) -> list:
+        """Загружает список администраторов из файла admins.json"""
+        try:
+            if os.path.exists("admins.json"):
+                with open("admins.json", 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return data.get("admins", [])
+            else:
+                logger.warning("Файл admins.json не найден, используем пустой список администраторов")
+                return []
+        except Exception as e:
+            logger.error(f"Ошибка загрузки списка администраторов: {e}")
+            return []
     
     def load_users(self) -> Dict:
         """Загружает данные пользователей из файла"""
