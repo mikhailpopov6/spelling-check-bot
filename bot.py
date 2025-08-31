@@ -270,19 +270,17 @@ class TextBot:
             
             stats = self.user_manager.get_stats()
             
-            stats_text = f"""
-📊 **Статистика бота**
+            stats_text = f"""📊 Статистика бота
 
-👥 **Пользователи:**
+👥 Пользователи:
 • Всего пользователей: {stats.get('total_users', 0)}
 
-📈 **Запросы:**
+📈 Запросы:
 • Всего запросов: {stats.get('total_requests', 0)}
 • За сегодня: {stats.get('today_requests', 0)}
 • За неделю: {stats.get('week_requests', 0)}
 
-🏆 **Топ-5 пользователей:**
-"""
+🏆 Топ-5 пользователей:"""
             
             top_users = stats.get('top_users', [])
             if top_users:
@@ -290,11 +288,14 @@ class TextBot:
                     username = user.get('username', 'Без username')
                     first_name = user.get('first_name', 'Неизвестно')
                     total_requests = user.get('requests', {}).get('total', 0)
-                    stats_text += f"{i}. @{username} ({first_name}) - {total_requests} запросов\n"
+                    # Экранируем специальные символы для безопасности
+                    username = username.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
+                    first_name = first_name.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
+                    stats_text += f"\n{i}. @{username} ({first_name}) - {total_requests} запросов"
             else:
-                stats_text += "Пока нет данных о пользователях\n"
+                stats_text += "\nПока нет данных о пользователях"
             
-            await update.message.reply_text(stats_text, parse_mode='Markdown')
+            await update.message.reply_text(stats_text)
             
         except Exception as e:
             logger.error(f"Ошибка в команде stats: {e}")
