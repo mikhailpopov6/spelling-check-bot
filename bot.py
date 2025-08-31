@@ -638,8 +638,8 @@ def main():
     application.add_handler(CommandHandler("improve", bot.improve_command))
     application.add_handler(CommandHandler("shorten", bot.shorten_command))
     application.add_handler(CommandHandler("translate", bot.translate_command))
-application.add_handler(CommandHandler("stats", bot.stats_command))
-application.add_handler(CommandHandler("myid", bot.myid_command))
+    application.add_handler(CommandHandler("stats", bot.stats_command))
+    application.add_handler(CommandHandler("myid", bot.myid_command))
     
     # Обработчики для кнопок и текста
     application.add_handler(CallbackQueryHandler(bot.button_callback))
