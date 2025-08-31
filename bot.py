@@ -270,17 +270,17 @@ class TextBot:
             
             stats = self.user_manager.get_stats()
             
-            stats_text = f"""📊 **Статистика бота**
+            stats_text = f"""📊 Статистика бота
 
-👥 **Пользователи:**
-• Всего пользователей: `{stats.get('total_users', 0)}`
+👥 Пользователи:
+• Всего пользователей: {stats.get('total_users', 0)}
 
-📈 **Запросы:**
-• Всего запросов: `{stats.get('total_requests', 0)}`
-• За сегодня: `{stats.get('today_requests', 0)}`
-• За неделю: `{stats.get('week_requests', 0)}`
+📈 Запросы:
+• Всего запросов: {stats.get('total_requests', 0)}
+• За сегодня: {stats.get('today_requests', 0)}
+• За неделю: {stats.get('week_requests', 0)}
 
-🏆 **Топ-5 пользователей:**"""
+🏆 Топ-5 пользователей:"""
             
             top_users = stats.get('top_users', [])
             if top_users:
@@ -289,26 +289,17 @@ class TextBot:
                     first_name = user.get('first_name', 'Неизвестно')
                     total_requests = user.get('requests', {}).get('total', 0)
                     
-                    # Безопасно форматируем username для ссылки
+                    # Форматируем username для ссылки
                     if username and username != 'Без username':
-                        # Экранируем специальные символы в username для MarkdownV2
-                        safe_username = username.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
-                        user_link = f"@{safe_username}"
+                        user_link = f"@{username}"
                     else:
                         user_link = "Без username"
                     
-                    # Экранируем специальные символы в имени для MarkdownV2
-                    safe_first_name = (first_name or '').replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
-                    
-                    # Экранируем все символы в строке статистики
-                    safe_stats_line = f"{i}. {user_link} ({safe_first_name}) - {total_requests} запросов"
-                    safe_stats_line = safe_stats_line.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
-                    
-                    stats_text += f"\n{safe_stats_line}"
+                    stats_text += f"\n{i}. {user_link} ({first_name}) - {total_requests} запросов"
             else:
                 stats_text += "\nПока нет данных о пользователях"
             
-            await update.message.reply_text(stats_text, parse_mode='MarkdownV2')
+            await update.message.reply_text(stats_text)
             
         except Exception as e:
             logger.error(f"Ошибка в команде stats: {e}")
