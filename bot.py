@@ -300,31 +300,6 @@ class TextBot:
             logger.error(f"Ошибка в команде stats: {e}")
             await update.message.reply_text("❌ Произошла ошибка при получении статистики. Проверьте логи.")
     
-    async def myid_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработчик команды /myid - показывает ID пользователя"""
-        try:
-            user = update.effective_user
-            user_id = user.id
-            username = user.username or "Не указан"
-            first_name = user.first_name or "Не указано"
-            
-            message = f"""
-🆔 **Ваши данные:**
-
-**ID:** `{user_id}`
-**Username:** @{username}
-**Имя:** {first_name}
-
-💡 **Для получения доступа к команде /stats:**
-Добавьте ваш ID в список администраторов в файле `user_manager.py`
-"""
-            
-            await update.message.reply_text(message, parse_mode='Markdown')
-            
-        except Exception as e:
-            logger.error(f"Ошибка в команде myid: {e}")
-            await update.message.reply_text("❌ Произошла ошибка при получении ID.")
-    
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
         query = update.callback_query
@@ -639,7 +614,6 @@ def main():
     application.add_handler(CommandHandler("shorten", bot.shorten_command))
     application.add_handler(CommandHandler("translate", bot.translate_command))
     application.add_handler(CommandHandler("stats", bot.stats_command))
-    application.add_handler(CommandHandler("myid", bot.myid_command))
     
     # Обработчики для кнопок и текста
     application.add_handler(CallbackQueryHandler(bot.button_callback))
