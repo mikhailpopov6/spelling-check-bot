@@ -117,7 +117,7 @@ class TextBot:
         user_id = update.effective_user.id
         
         # Проверяем пересланное сообщение
-        if update.message.forward_from or update.message.forward_from_chat:
+        if hasattr(update.message, 'forward_from') and update.message.forward_from or hasattr(update.message, 'forward_from_chat') and update.message.forward_from_chat:
             # Если это пересланное сообщение, берем текст из него
             text = update.message.text or ""
             if text.startswith('/check'):
@@ -151,7 +151,7 @@ class TextBot:
         user_id = update.effective_user.id
         
         # Проверяем пересланное сообщение
-        if update.message.forward_from or update.message.forward_from_chat:
+        if hasattr(update.message, 'forward_from') and update.message.forward_from or hasattr(update.message, 'forward_from_chat') and update.message.forward_from_chat:
             # Если это пересланное сообщение, берем текст из него
             text = update.message.text or ""
             if text.startswith('/improve'):
@@ -185,7 +185,7 @@ class TextBot:
         user_id = update.effective_user.id
         
         # Проверяем пересланное сообщение
-        if update.message.forward_from or update.message.forward_from_chat:
+        if hasattr(update.message, 'forward_from') and update.message.forward_from or hasattr(update.message, 'forward_from_chat') and update.message.forward_from_chat:
             # Если это пересланное сообщение, берем текст из него
             text = update.message.text or ""
             if text.startswith('/shorten'):
@@ -219,7 +219,7 @@ class TextBot:
         user_id = update.effective_user.id
         
         # Проверяем пересланное сообщение
-        if update.message.forward_from or update.message.forward_from_chat:
+        if hasattr(update.message, 'forward_from') and update.message.forward_from or hasattr(update.message, 'forward_from_chat') and update.message.forward_from_chat:
             # Если это пересланное сообщение, берем текст из него
             full_text = update.message.text or ""
             if full_text.startswith('/translate'):
